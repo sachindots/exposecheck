@@ -1,2 +1,0 @@
-worker	
-redis	6379/tcp
