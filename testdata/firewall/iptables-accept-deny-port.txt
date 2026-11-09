@@ -1,0 +1,6 @@
+-P INPUT ACCEPT
+-P FORWARD ACCEPT
+-P OUTPUT ACCEPT
+-A INPUT -p tcp -m tcp --dport 8080 -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p udp -m udp --dport 5353 -j DROP
+-A OUTPUT -p tcp -m tcp --dport 9000 -j DROP
