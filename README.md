@@ -1,6 +1,6 @@
 # exposecheck
 
-Audit listening network sockets on a Linux host and report unblocked public services or Docker port exposures.
+Audit listening network sockets on a Linux host and report unblocked public services or Docker port exposures. See [docs/showcase/showcase.html](docs/showcase/showcase.html) for a terminal demo.
 
 ## Why
 
@@ -52,13 +52,13 @@ Listeners
     tcp  127.0.0.1:8123
 
 Findings (4)
-  [docker] tcp 0.0.0.0:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp 0.0.0.0:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp 0.0.0.0:6334: container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp 0.0.0.0:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
-  [docker] tcp [::]:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp [::]:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp [::]:6334: container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp [::]:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
 
 Notes
