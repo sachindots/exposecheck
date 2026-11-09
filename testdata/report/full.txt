@@ -4,6 +4,8 @@ Listeners
     tcp  [::]:8080
   tailnet
     udp  100.64.0.5:41641
+  bridge
+    tcp  172.17.0.1:2375
   local
     tcp  127.0.0.1:5432
 

@@ -45,7 +45,7 @@ func TestCheck(t *testing.T) {
 				}
 				return os.ReadFile(filepath.Join("..", "..", "testdata", "docker", tt.file))
 			}
-			findings, notes, err := Check(run, tailnet)
+			findings, notes, err := Check(run, tailnet, nil)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("err = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -84,7 +84,7 @@ func TestFindingText(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			findings, _, err := Check(func(string, ...string) ([]byte, error) { return []byte(tt.ps), nil }, nil)
+			findings, _, err := Check(func(string, ...string) ([]byte, error) { return []byte(tt.ps), nil }, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}

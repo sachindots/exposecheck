@@ -99,7 +99,7 @@ See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for JSON schema d
 - **No auto-fix:** Reports actionable fix commands, but does not modify firewalls or restart containers.
 - **Firewall parsing is simple:** Ignores source addresses and network interfaces. Hosts where the `INPUT` chain jumps to other chains (such as `ufw`) are noted and not evaluated.
 - **Needs root:** Needs root privileges (e.g. `sudo`) to resolve process names of other users and to query firewall tools (`ufw`, `iptables`, `nft`).
-- **Address classification:** Every non-loopback, non-tailnet address counts as public (including Docker bridge IPs).
+- **Address classification:** Addresses on `docker0`, `br-*` and `virbr*` interfaces are class `bridge` and raise no findings. Every other non-loopback, non-tailnet address counts as public, including LAN addresses.
 
 ## License
 

@@ -63,7 +63,7 @@ func TestParse(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.table, func(t *testing.T) {
-			got, err := sockets.Parse(strings.NewReader(fixture(t, tt.table)), tt.table, tailnet)
+			got, err := sockets.Parse(strings.NewReader(fixture(t, tt.table)), tt.table, tailnet, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -79,10 +79,21 @@ func TestClassify(t *testing.T) {
 		netip.MustParseAddr("0.0.0.0"), netip.MustParseAddr("::"),
 		netip.MustParseAddr("::ffff:203.0.113.9"), netip.MustParseAddr("fd7a:115c::1"),
 	}
+	bridge := sockets.BridgeAddrs([]sockets.Iface{
+		{Name: "eth0", Addrs: []netip.Addr{netip.MustParseAddr("192.168.1.5")}},
+		{Name: "docker0", Addrs: []netip.Addr{netip.MustParseAddr("172.17.0.1")}},
+		{Name: "br-1a2b3c", Addrs: []netip.Addr{netip.MustParseAddr("172.18.0.1"), netip.MustParseAddr("fd00::1")}},
+		{Name: "virbr0", Addrs: []netip.Addr{netip.MustParseAddr("192.168.122.1")}},
+		{Name: "bridge0", Addrs: []netip.Addr{netip.MustParseAddr("10.9.9.1")}},
+	})
 	tests := []struct {
 		addr string
 		want sockets.Class
 	}{
+		{"172.17.0.1", sockets.Bridge}, {"172.18.0.1", sockets.Bridge}, {"fd00::1", sockets.Bridge},
+		{"192.168.122.1", sockets.Bridge}, {"::ffff:172.17.0.1", sockets.Bridge},
+		{"192.168.1.5", sockets.Public}, {"10.9.9.1", sockets.Public}, {"172.17.0.2", sockets.Public},
+
 		{"0.0.0.0", sockets.Public}, {"::", sockets.Public}, {"::ffff:0.0.0.0", sockets.Public},
 		{"127.0.0.1", sockets.Local}, {"127.255.255.254", sockets.Local},
 		{"126.255.255.255", sockets.Public}, {"128.0.0.0", sockets.Public}, {"::1", sockets.Local},
@@ -96,7 +107,7 @@ func TestClassify(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.addr, func(t *testing.T) {
-			if got := sockets.Classify(netip.MustParseAddr(tt.addr), tailnet); got != tt.want {
+			if got := sockets.Classify(netip.MustParseAddr(tt.addr), tailnet, bridge); got != tt.want {
 				t.Fatalf("Classify() = %q, want %q", got, tt.want)
 			}
 		})
@@ -116,7 +127,7 @@ func TestParseErrors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.file, func(t *testing.T) {
-			got, err := sockets.Parse(strings.NewReader(fixture(t, tt.file)), "tcp", nil)
+			got, err := sockets.Parse(strings.NewReader(fixture(t, tt.file)), "tcp", nil, nil)
 			if err == nil || !strings.Contains(err.Error(), tt.want) || got != nil {
 				t.Fatalf("Parse() = %v, %v; want nil and %q", got, err, tt.want)
 			}
@@ -144,7 +155,7 @@ func TestParseReadBoundaries(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := sockets.Parse(tt.input, tt.table, nil)
+			got, err := sockets.Parse(tt.input, tt.table, nil, nil)
 			if tt.want == "" {
 				if err != nil || len(got) != 0 {
 					t.Fatalf("Parse() = %v, %v; want no listeners", got, err)
@@ -193,7 +204,7 @@ func TestScan(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			got, err := sockets.Scan(root, nil)
+			got, err := sockets.Scan(root, nil, nil)
 			if tt.wantErr != "" {
 				path := filepath.Join(root, "net", tt.wantErr)
 				if err == nil || !strings.Contains(err.Error(), path) || got != nil {

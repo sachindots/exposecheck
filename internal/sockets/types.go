@@ -8,6 +8,7 @@ const (
 	Public  Class = "public"
 	Local   Class = "local"
 	Tailnet Class = "tailnet"
+	Bridge  Class = "bridge"
 )
 
 type Listener struct {

@@ -16,6 +16,7 @@ var full = Report{
 		{Proto: "tcp", Addr: addr("127.0.0.1"), Port: 5432, Inode: 3, Class: sockets.Local},
 		{Proto: "tcp", Addr: addr("::"), Port: 8080, Inode: 2, Class: sockets.Public},
 		{Proto: "tcp", Addr: addr("0.0.0.0"), Port: 22, Inode: 1, Class: sockets.Public, Process: &sockets.Process{PID: 812, Command: "sshd"}},
+		{Proto: "tcp", Addr: addr("172.17.0.1"), Port: 2375, Inode: 5, Class: sockets.Bridge},
 		{Proto: "udp", Addr: addr("100.64.0.5"), Port: 41641, Inode: 4, Class: sockets.Tailnet},
 	},
 	Findings: []sockets.Finding{{

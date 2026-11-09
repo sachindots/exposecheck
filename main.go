@@ -49,7 +49,12 @@ func collect() (report.Report, error) {
 	if err != nil {
 		return report.Report{}, err
 	}
-	listeners, err := sockets.Scan("/proc", tailnet)
+	ifaces, err := sockets.Interfaces()
+	if err != nil {
+		return report.Report{}, err
+	}
+	bridge := sockets.BridgeAddrs(ifaces)
+	listeners, err := sockets.Scan("/proc", tailnet, bridge)
 	if err != nil {
 		return report.Report{}, err
 	}
@@ -66,7 +71,7 @@ func collect() (report.Report, error) {
 		return report.Report{}, err
 	}
 	rep.Findings, rep.Notes = append(rep.Findings, findings...), append(rep.Notes, notes...)
-	findings, notes, err = docker.Check(nil, tailnet)
+	findings, notes, err = docker.Check(nil, tailnet, bridge)
 	if err != nil {
 		return report.Report{}, err
 	}

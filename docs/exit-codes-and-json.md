@@ -55,7 +55,7 @@ Each object in `listeners` represents an open TCP or UDP socket, matching `socke
 | `addr` | string | Bound IP address (e.g. `"0.0.0.0"`, `"127.0.0.1"`, `"::"`). |
 | `port` | number | Port number (`1` to `65535`). |
 | `inode` | number | Kernel socket inode number from `/proc/net/*`. |
-| `class` | string | Address category: `"public"`, `"local"`, or `"tailnet"`. |
+| `class` | string | Address category: `"public"`, `"local"`, `"tailnet"`, or `"bridge"`. |
 | `process` | object (optional) | Present when socket inode maps to a readable process in `/proc`. Omitted (`omitempty`) when unreadable or process exited. |
 
 The `process` object matches `sockets.Process` from `internal/sockets/types.go`:
@@ -67,9 +67,10 @@ The `process` object matches `sockets.Process` from `internal/sockets/types.go`:
 
 #### Address classification (`class`)
 
-- `"public"`: Unspecified addresses (`0.0.0.0`, `::`) or non-loopback addresses outside tailnet ranges (including Docker bridge interfaces).
+- `"public"`: Unspecified addresses (`0.0.0.0`, `::`) or non-loopback addresses outside tailnet ranges and bridge interfaces (LAN addresses stay public).
 - `"local"`: Loopback addresses (`127.0.0.0/8`, `::1`).
 - `"tailnet"`: Tailscale addresses (`100.64.0.0/10`).
+- `"bridge"`: Addresses assigned to `docker0`, `br-*`, or `virbr*` interfaces. Not reachable from outside the host, so they raise no findings.
 
 ### `findings` items
 
