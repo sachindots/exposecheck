@@ -1,6 +1,6 @@
 # exposecheck
 
-Audit listening network sockets on a Linux host and report unblocked public services or Docker port exposures.
+Audit listening network sockets on a Linux host and report unblocked public services or Docker port exposures. See [docs/showcase/](docs/showcase/) for a terminal demo.
 
 ## Why
 
