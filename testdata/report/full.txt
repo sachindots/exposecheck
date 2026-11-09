@@ -1,0 +1,15 @@
+Listeners
+  public
+    tcp  0.0.0.0:22               sshd (pid 812)
+    tcp  [::]:8080
+  tailnet
+    udp  100.64.0.5:41641
+  local
+    tcp  127.0.0.1:5432
+
+Findings (1)
+  [firewall] tcp [::]:8080: public listener not blocked by firewall
+    fix: ufw deny 8080/tcp, or bind to 127.0.0.1
+
+Notes
+  iptables: not root, skipped
