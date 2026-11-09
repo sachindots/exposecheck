@@ -7,7 +7,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 docker rm -f demo-db >/dev/null 2>&1 || true
-docker run -d --rm --name demo-db -p 6333:80 nginx:alpine >/dev/null 2>&1
+docker run -d --rm --name demo-db -p 16379:6379 redis:7 >/dev/null 2>&1
 
 unshare -rn bash << 'INNER'
 ip link set lo up
@@ -44,8 +44,8 @@ type_cmd "./exposecheck --json | jq .findings[0]"
 ./exposecheck --json | jq .findings[0] || true
 sleep 3
 
-# Beat 3: Exit code
-type_cmd 'echo $?'
-echo "1"
+# Beat 3: Real exit status execution
+type_cmd './exposecheck >/dev/null 2>&1; echo $?'
+./exposecheck >/dev/null 2>&1; echo $?
 sleep 3
 INNER

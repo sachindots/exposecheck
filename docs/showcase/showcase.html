@@ -205,8 +205,8 @@
       <div class="feature-item">
         <h3>2. Docker port bypasses</h3>
         <p>Docker publishes container ports via custom iptables rules directly on host interfaces. These bindings bypass standard ufw host firewalls. <code>exposecheck</code> queries container port maps and flags any exposed interface bindings.</p>
-        <pre><code>[docker] tcp 0.0.0.0:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
-  fix: publish with -p 127.0.0.1:6333:80, or filter in the DOCKER-USER chain</code></pre>
+        <pre><code>[docker] tcp 0.0.0.0:16379: container demo-db publishes port 16379/tcp on all interfaces; Docker bypasses ufw
+  fix: publish with -p 127.0.0.1:16379:6379, or filter in the DOCKER-USER chain</code></pre>
       </div>
 
       <div class="feature-item">
@@ -221,7 +221,7 @@
   "reason": "public listener not blocked by firewall",
   "fix": "ufw deny 8080/tcp, or bind to 127.0.0.1"
 }
-$ echo $?
+$ ./exposecheck >/dev/null 2>&1; echo $?
 1</code></pre>
       </div>
     </section>
