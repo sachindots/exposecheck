@@ -1,0 +1,10 @@
+Status: active
+Logging: on (low)
+Default: allow (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+8080/tcp                   DENY IN     Anywhere
+5353/udp                   REJECT IN   Anywhere
+25                         ALLOW OUT   Anywhere (out)

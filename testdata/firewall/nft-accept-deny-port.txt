@@ -1,0 +1,7 @@
+table inet filter {
+	chain input {
+		type filter hook input priority filter; policy accept;
+		tcp dport 8080 drop
+		udp dport 5353 reject comment "no mdns"
+	}
+}
