@@ -25,7 +25,12 @@ type Process struct {
 }
 
 type Finding struct {
-	Listener Listener `json:"listener"`
-	Reason   string   `json:"reason"`
-	Fix      string   `json:"fix"`
+	Kind   string     `json:"kind"`
+	Proto  string     `json:"proto"`
+	Addr   netip.Addr `json:"addr"`
+	Port   uint16     `json:"port"`
+	Reason string     `json:"reason"`
+	Fix    string     `json:"fix"`
 }
+
+type Note string
