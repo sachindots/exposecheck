@@ -1,0 +1,4 @@
+/exposecheck
+/dist/
+*.test
+*.out
