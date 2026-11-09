@@ -75,8 +75,8 @@ func Check(run func(string, ...string) ([]byte, error), listeners []sockets.List
 		}
 		findings = append(findings, sockets.Finding{
 			Kind: "firewall", Proto: l.Proto, Addr: l.Addr, Port: l.Port,
-			Reason: fmt.Sprintf("public listener on port %d/%s is not blocked by any firewall rule", l.Port, l.Proto),
-			Fix:    fmt.Sprintf("ufw deny %d/%s, or bind the service to 127.0.0.1", l.Port, l.Proto),
+			Reason: "public listener not blocked by firewall",
+			Fix:    fmt.Sprintf("ufw deny %d/%s, or bind to 127.0.0.1", l.Port, l.Proto),
 		})
 	}
 	return findings, notes, nil

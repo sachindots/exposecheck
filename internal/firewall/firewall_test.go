@@ -143,7 +143,7 @@ func TestFindingText(t *testing.T) {
 		return nil, exec.ErrNotFound
 	}
 	findings, _, _ = Check(run, []sockets.Listener{listener("tcp", 8080, sockets.Public)})
-	if len(findings) != 1 || findings[0].Fix != "ufw deny 8080/tcp, or bind the service to 127.0.0.1" {
+	if len(findings) != 1 || findings[0].Fix != "ufw deny 8080/tcp, or bind to 127.0.0.1" || findings[0].Reason != "public listener not blocked by firewall" || findings[0].Kind != "firewall" {
 		t.Errorf("findings = %+v", findings)
 	}
 }
