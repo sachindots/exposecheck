@@ -1,0 +1,49 @@
+{
+  "listeners": [
+    {
+      "proto": "tcp",
+      "addr": "127.0.0.1",
+      "port": 5432,
+      "inode": 3,
+      "class": "local"
+    },
+    {
+      "proto": "tcp",
+      "addr": "::",
+      "port": 8080,
+      "inode": 2,
+      "class": "public"
+    },
+    {
+      "proto": "tcp",
+      "addr": "0.0.0.0",
+      "port": 22,
+      "inode": 1,
+      "class": "public",
+      "process": {
+        "pid": 812,
+        "command": "sshd"
+      }
+    },
+    {
+      "proto": "udp",
+      "addr": "100.64.0.5",
+      "port": 41641,
+      "inode": 4,
+      "class": "tailnet"
+    }
+  ],
+  "findings": [
+    {
+      "kind": "firewall",
+      "proto": "tcp",
+      "addr": "::",
+      "port": 8080,
+      "reason": "public listener not blocked by firewall",
+      "fix": "ufw deny 8080/tcp, or bind to 127.0.0.1"
+    }
+  ],
+  "notes": [
+    "iptables: not root, skipped"
+  ]
+}
