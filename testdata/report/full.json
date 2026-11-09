@@ -26,6 +26,13 @@
       }
     },
     {
+      "proto": "tcp",
+      "addr": "172.17.0.1",
+      "port": 2375,
+      "inode": 5,
+      "class": "bridge"
+    },
+    {
       "proto": "udp",
       "addr": "100.64.0.5",
       "port": 41641,

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/netip"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ import (
 	"strings"
 )
 
-func Classify(addr netip.Addr, tailnet []netip.Addr) Class {
+func Classify(addr netip.Addr, tailnet, bridge []netip.Addr) Class {
 	addr = addr.Unmap()
 	if addr.IsUnspecified() {
 		return Public
@@ -29,10 +30,56 @@ func Classify(addr netip.Addr, tailnet []netip.Addr) Class {
 			return Tailnet
 		}
 	}
+	for _, ip := range bridge {
+		if addr == ip.Unmap() {
+			return Bridge
+		}
+	}
 	return Public
 }
 
-func Scan(procRoot string, tailnet []netip.Addr) ([]Listener, error) {
+// Iface is a network interface with its addresses, so tests can fake the host.
+type Iface struct {
+	Name  string
+	Addrs []netip.Addr
+}
+
+func Interfaces() ([]Iface, error) {
+	all, err := net.Interfaces()
+	if err != nil {
+		return nil, fmt.Errorf("list interfaces: %w", err)
+	}
+	var out []Iface
+	for _, i := range all {
+		addrs, err := i.Addrs()
+		if err != nil {
+			return nil, fmt.Errorf("list %s addresses: %w", i.Name, err)
+		}
+		iface := Iface{Name: i.Name}
+		for _, a := range addrs {
+			prefix, err := netip.ParsePrefix(a.String())
+			if err != nil {
+				return nil, fmt.Errorf("parse %s address %q: %w", i.Name, a, err)
+			}
+			iface.Addrs = append(iface.Addrs, prefix.Addr())
+		}
+		out = append(out, iface)
+	}
+	return out, nil
+}
+
+// BridgeAddrs returns the addresses on docker0, br-* and virbr* interfaces.
+func BridgeAddrs(ifaces []Iface) []netip.Addr {
+	var bridge []netip.Addr
+	for _, i := range ifaces {
+		if i.Name == "docker0" || strings.HasPrefix(i.Name, "br-") || strings.HasPrefix(i.Name, "virbr") {
+			bridge = append(bridge, i.Addrs...)
+		}
+	}
+	return bridge
+}
+
+func Scan(procRoot string, tailnet, bridge []netip.Addr) ([]Listener, error) {
 	var listeners []Listener
 	for _, table := range []string{"tcp", "tcp6", "udp", "udp6"} {
 		path := filepath.Join(procRoot, "net", table)
@@ -43,7 +90,7 @@ func Scan(procRoot string, tailnet []netip.Addr) ([]Listener, error) {
 			}
 			return nil, err
 		}
-		rows, err := Parse(file, table, tailnet)
+		rows, err := Parse(file, table, tailnet, bridge)
 		file.Close()
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", path, err)
@@ -53,7 +100,7 @@ func Scan(procRoot string, tailnet []netip.Addr) ([]Listener, error) {
 	return listeners, nil
 }
 
-func Parse(r io.Reader, table string, tailnet []netip.Addr) ([]Listener, error) {
+func Parse(r io.Reader, table string, tailnet, bridge []netip.Addr) ([]Listener, error) {
 	var width int
 	switch table {
 	case "tcp", "udp":
@@ -109,7 +156,7 @@ func Parse(r io.Reader, table string, tailnet []netip.Addr) ([]Listener, error) 
 		}
 		listeners = append(listeners, Listener{
 			Proto: proto, Addr: local.Addr(), Port: local.Port(), Inode: inode,
-			Class: Classify(local.Addr(), tailnet),
+			Class: Classify(local.Addr(), tailnet, bridge),
 		})
 	}
 	if err := scanner.Err(); err != nil {

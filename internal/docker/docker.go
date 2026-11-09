@@ -14,7 +14,7 @@ import (
 // Check lists ports Docker publishes on a public address, one finding per host
 // port and address. Docker adds its own iptables rules, so ufw does not block
 // them. A nil run executes the command and returns its stdout.
-func Check(run func(string, ...string) ([]byte, error), tailnet []netip.Addr) ([]sockets.Finding, []sockets.Note, error) {
+func Check(run func(string, ...string) ([]byte, error), tailnet, bridge []netip.Addr) ([]sockets.Finding, []sockets.Note, error) {
 	if run == nil {
 		run = func(name string, args ...string) ([]byte, error) {
 			return exec.Command(name, args...).Output()
@@ -32,7 +32,7 @@ func Check(run func(string, ...string) ([]byte, error), tailnet []netip.Addr) ([
 			if !published {
 				continue
 			}
-			found, err := parseMapping(name, hostSide, containerSide, tailnet)
+			found, err := parseMapping(name, hostSide, containerSide, tailnet, bridge)
 			if err != nil {
 				return nil, nil, fmt.Errorf("parse docker ports %q for %s: %w", mapping, name, err)
 			}
@@ -44,7 +44,7 @@ func Check(run func(string, ...string) ([]byte, error), tailnet []netip.Addr) ([
 
 // parseMapping handles "0.0.0.0:6333-6334" -> "6333-6334/tcp". The host
 // address may be written 0.0.0.0, [::] or :::.
-func parseMapping(name, hostSide, containerSide string, tailnet []netip.Addr) ([]sockets.Finding, error) {
+func parseMapping(name, hostSide, containerSide string, tailnet, bridge []netip.Addr) ([]sockets.Finding, error) {
 	i := strings.LastIndex(hostSide, ":")
 	if i < 0 {
 		return nil, errors.New("no host address")
@@ -62,7 +62,7 @@ func parseMapping(name, hostSide, containerSide string, tailnet []netip.Addr) ([
 	if err != nil {
 		return nil, fmt.Errorf("container port: %w", err)
 	}
-	if sockets.Classify(addr, tailnet) != sockets.Public {
+	if sockets.Classify(addr, tailnet, bridge) != sockets.Public {
 		return nil, nil
 	}
 	var findings []sockets.Finding

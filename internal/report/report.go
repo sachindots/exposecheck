@@ -48,7 +48,7 @@ func (r Report) Text() string {
 	if len(r.Listeners) == 0 {
 		b.WriteString("  none\n")
 	}
-	for _, class := range []sockets.Class{sockets.Public, sockets.Tailnet, sockets.Local} {
+	for _, class := range []sockets.Class{sockets.Public, sockets.Tailnet, sockets.Bridge, sockets.Local} {
 		var group []sockets.Listener
 		for _, l := range r.Listeners {
 			if l.Class == class {
