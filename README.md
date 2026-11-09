@@ -6,13 +6,13 @@ Audit listening network sockets on a Linux host and report unblocked public serv
 
 Services often bind to `0.0.0.0` or `[::]` unintentionally. Databases, debug ports, and internal HTTP endpoints get left open to local networks or the internet.
 
-Host firewalls like ufw, iptables, or nftables can block incoming traffic, but rule gaps leave listeners reachable. Furthermore, Docker configures its own iptables rules and publishes container ports directly on host interfaces, bypassing ufw rules entirely.
+Host firewalls like ufw, iptables, or nftables can block incoming traffic, but rule gaps leave listeners reachable. Docker configures its own iptables rules and publishes container ports directly on host interfaces, bypassing ufw rules entirely.
 
 `exposecheck` checks what is open on your machine in one run. It reads listening sockets directly from the kernel via `/proc/net`, checks host firewall rules, inspects Docker port mappings, and lists findings with specific fix instructions. When findings exist, it exits with status code 1, making it suitable for CI checks and server audits.
 
 ## Install
 
-Install with Go (version 1.22 or later):
+Install with Go (version 1.27 or later):
 
 ```bash
 go install github.com/sachindots/exposecheck@latest
@@ -79,73 +79,9 @@ Run with `--json` for machine-readable JSON output:
 
 ```bash
 $ ./exposecheck --json
-{
-  "listeners": [
-    {
-      "proto": "tcp",
-      "addr": "172.21.0.1",
-      "port": 53,
-      "inode": 38049,
-      "class": "public"
-    },
-    ... (trimmed 79 listeners) ...
-    {
-      "proto": "tcp",
-      "addr": "127.0.0.1",
-      "port": 6379,
-      "inode": 30421,
-      "class": "local"
-    }
-  ],
-  "findings": [
-    {
-      "kind": "docker",
-      "proto": "tcp",
-      "addr": "0.0.0.0",
-      "port": 6333,
-      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
-      "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
-    },
-    {
-      "kind": "docker",
-      "proto": "tcp",
-      "addr": "0.0.0.0",
-      "port": 6334,
-      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
-      "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
-    },
-    {
-      "kind": "docker",
-      "proto": "tcp",
-      "addr": "::",
-      "port": 6333,
-      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
-      "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
-    },
-    {
-      "kind": "docker",
-      "proto": "tcp",
-      "addr": "::",
-      "port": 6334,
-      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
-      "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
-    }
-  ],
-  "notes": [
-    "process names need root: run with sudo to see them",
-    "ufw: not root, skipped",
-    "iptables: not root, skipped",
-    "nft: not root, skipped"
-  ]
-}
-
-$ echo $?
-1
 ```
 
-*(Listener list above was trimmed for brevity.)*
-
-See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for full exit code and JSON field documentation.
+See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for JSON schema details, exit codes, and output examples.
 
 ## How it works
 

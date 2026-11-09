@@ -69,7 +69,7 @@ The `process` object matches `sockets.Process` from `internal/sockets/types.go`:
 
 - `"public"`: Unspecified addresses (`0.0.0.0`, `::`) or non-loopback addresses outside tailnet ranges (including Docker bridge interfaces).
 - `"local"`: Loopback addresses (`127.0.0.0/8`, `::1`).
-- `"tailnet"`: Tailscale addresses (`100.64.0.0/10` or IPs assigned to interface `tailscale0`).
+- `"tailnet"`: Tailscale addresses (`100.64.0.0/10`).
 
 ### `findings` items
 
@@ -174,9 +174,9 @@ $ echo $?
 
 *(Listener list above was trimmed for brevity.)*
 
-### Output with zero findings
+### Example output with zero findings
 
-Real run of `./exposecheck --json` on a clean host configuration:
+Example run of `./exposecheck --json` with zero findings:
 
 ```bash
 $ ./exposecheck --json
@@ -189,15 +189,15 @@ $ ./exposecheck --json
       "inode": 3073699,
       "class": "local",
       "process": {
-        "pid": 2,
-        "command": "python3"
+        "pid": 1284,
+        "command": "postgres"
       }
     }
   ],
   "findings": [],
   "notes": [
-    "ufw: failed (exit status 1), skipped",
-    "docker: failed (exit status 1), skipped"
+    "ufw: not root, skipped",
+    "docker: not installed, skipped"
   ]
 }
 
