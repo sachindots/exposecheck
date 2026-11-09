@@ -132,7 +132,7 @@ $ ./exposecheck --json
       "proto": "tcp",
       "addr": "0.0.0.0",
       "port": 6333,
-      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
+      "reason": "container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
       "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
     },
     {
@@ -140,7 +140,7 @@ $ ./exposecheck --json
       "proto": "tcp",
       "addr": "0.0.0.0",
       "port": 6334,
-      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
+      "reason": "container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
       "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
     },
     {
@@ -148,7 +148,7 @@ $ ./exposecheck --json
       "proto": "tcp",
       "addr": "::",
       "port": 6333,
-      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
+      "reason": "container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
       "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
     },
     {
@@ -156,7 +156,7 @@ $ ./exposecheck --json
       "proto": "tcp",
       "addr": "::",
       "port": 6334,
-      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
+      "reason": "container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
       "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
     }
   ],

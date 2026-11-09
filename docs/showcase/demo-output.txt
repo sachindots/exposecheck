@@ -2,20 +2,20 @@
 $ ./exposecheck
 Listeners
   public
-    tcp  0.0.0.0:8080             python3 (pid 128585)
+    tcp  0.0.0.0:8080             python3 (pid 191998)
   local
-    tcp  127.0.0.1:6379           python3 (pid 128586)
+    tcp  127.0.0.1:6379           python3 (pid 191999)
 
 Findings (5)
   [firewall] tcp 0.0.0.0:8080: public listener not blocked by firewall
     fix: ufw deny 8080/tcp, or bind to 127.0.0.1
-  [docker] tcp 0.0.0.0:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp 0.0.0.0:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp 0.0.0.0:6334: container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp 0.0.0.0:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
-  [docker] tcp [::]:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp [::]:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp [::]:6334: container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw
+  [docker] tcp [::]:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
 
 Notes

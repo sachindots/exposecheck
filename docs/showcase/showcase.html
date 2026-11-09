@@ -205,7 +205,7 @@
       <div class="feature-item">
         <h3>2. Docker port bypasses</h3>
         <p>Docker publishes container ports via custom iptables rules directly on host interfaces. These bindings bypass standard ufw host firewalls. <code>exposecheck</code> queries container port maps and flags any exposed interface bindings.</p>
-        <pre><code>[docker] tcp 0.0.0.0:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
+        <pre><code>[docker] tcp 0.0.0.0:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
   fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain</code></pre>
       </div>
 
