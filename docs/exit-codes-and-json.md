@@ -37,17 +37,17 @@ exposecheck --json
 
 ### Top-level fields
 
-The root object contains three arrays:
+The root object contains three arrays defined in `internal/report/report.go`:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `listeners` | array | All listening network sockets found on the host. Always an array (never `null`). |
-| `findings` | array | All identified exposure risks. Always an array (never `null`). |
-| `notes` | array of strings | Informational messages detailing skipped tools or permission limits. Always an array (never `null`). |
+| `listeners` | array of Listener | All listening network sockets found on the host. Always an array (never `null`). |
+| `findings` | array of Finding | All identified exposure risks. Always an array (never `null`). |
+| `notes` | array of Note (strings) | Informational messages detailing skipped tools or permission limits. Always an array (never `null`). |
 
 ### `listeners` items
 
-Each object in `listeners` represents an open TCP or UDP socket:
+Each object in `listeners` represents an open TCP or UDP socket, matching `sockets.Listener` from `internal/sockets/types.go`:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -56,9 +56,9 @@ Each object in `listeners` represents an open TCP or UDP socket:
 | `port` | number | Port number (`1` to `65535`). |
 | `inode` | number | Kernel socket inode number from `/proc/net/*`. |
 | `class` | string | Address category: `"public"`, `"local"`, or `"tailnet"`. |
-| `process` | object (optional) | Present when socket inode maps to a readable process in `/proc`. Omitted when unreadable or process exited. |
+| `process` | object (optional) | Present when socket inode maps to a readable process in `/proc`. Omitted (`omitempty`) when unreadable or process exited. |
 
-The `process` object contains:
+The `process` object matches `sockets.Process` from `internal/sockets/types.go`:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -67,13 +67,13 @@ The `process` object contains:
 
 #### Address classification (`class`)
 
-- `"public"`: Unspecified addresses (`0.0.0.0`, `::`) or non-loopback addresses outside tailnet ranges.
+- `"public"`: Unspecified addresses (`0.0.0.0`, `::`) or non-loopback addresses outside tailnet ranges (including Docker bridge interfaces).
 - `"local"`: Loopback addresses (`127.0.0.0/8`, `::1`).
 - `"tailnet"`: Tailscale addresses (`100.64.0.0/10` or IPs assigned to interface `tailscale0`).
 
 ### `findings` items
 
-Each object in `findings` describes an exposure risk:
+Each object in `findings` describes an exposure risk, matching `sockets.Finding` from `internal/sockets/types.go`:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -104,41 +104,29 @@ An array of strings reporting operational limits encountered during the audit. E
 
 ### Output with findings
 
-```json
+Real run of `./exposecheck --json` on host:
+
+```bash
+$ ./exposecheck --json
 {
   "listeners": [
     {
       "proto": "tcp",
-      "addr": "0.0.0.0",
-      "port": 8000,
-      "inode": 3071699,
-      "class": "public",
-      "process": {
-        "pid": 2,
-        "command": "python3"
-      }
+      "addr": "172.21.0.1",
+      "port": 53,
+      "inode": 38049,
+      "class": "public"
     },
+    ... (trimmed 79 listeners) ...
     {
       "proto": "tcp",
       "addr": "127.0.0.1",
-      "port": 5432,
-      "inode": 3072378,
-      "class": "local",
-      "process": {
-        "pid": 3,
-        "command": "python3"
-      }
+      "port": 6379,
+      "inode": 30421,
+      "class": "local"
     }
   ],
   "findings": [
-    {
-      "kind": "firewall",
-      "proto": "tcp",
-      "addr": "0.0.0.0",
-      "port": 8000,
-      "reason": "public listener not blocked by firewall",
-      "fix": "ufw deny 8000/tcp, or bind to 127.0.0.1"
-    },
     {
       "kind": "docker",
       "proto": "tcp",
@@ -173,14 +161,25 @@ An array of strings reporting operational limits encountered during the audit. E
     }
   ],
   "notes": [
-    "ufw: failed (exit status 1), skipped"
+    "process names need root: run with sudo to see them",
+    "ufw: not root, skipped",
+    "iptables: not root, skipped",
+    "nft: not root, skipped"
   ]
 }
+
+$ echo $?
+1
 ```
+
+*(Listener list above was trimmed for brevity.)*
 
 ### Output with zero findings
 
-```json
+Real run of `./exposecheck --json` on a clean host configuration:
+
+```bash
+$ ./exposecheck --json
 {
   "listeners": [
     {
@@ -201,4 +200,7 @@ An array of strings reporting operational limits encountered during the audit. E
     "docker: failed (exit status 1), skipped"
   ]
 }
+
+$ echo $?
+0
 ```

@@ -28,24 +28,30 @@ go build -o exposecheck .
 
 ## Usage
 
-Run `exposecheck` directly:
+Build and run `exposecheck`:
 
 ```bash
-exposecheck
-```
-
-Example output with open findings:
-
-```
+$ ./exposecheck
 Listeners
   public
-    tcp  0.0.0.0:8000             python3 (pid 2)
+    tcp  172.17.0.1:53
+    tcp  172.18.0.1:53
+    tcp  172.19.0.1:53
+    tcp  172.20.0.1:53
+    ... (trimmed 44 listeners) ...
+    tcp  0.0.0.0:6333
+    tcp  [::]:6333
+    tcp  0.0.0.0:6334
+    tcp  [::]:6334
+    tcp  [::]:8000                gohttpserver (pid 1932)
   local
-    tcp  127.0.0.1:5432           python3 (pid 3)
+    tcp  127.0.0.1:53
+    tcp  127.0.0.53:53
+    ... (trimmed 28 listeners) ...
+    tcp  127.0.0.1:6379
+    tcp  127.0.0.1:8123
 
-Findings (5)
-  [firewall] tcp 0.0.0.0:8000: public listener not blocked by firewall
-    fix: ufw deny 8000/tcp, or bind to 127.0.0.1
+Findings (4)
   [docker] tcp 0.0.0.0:6333: container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw
     fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
   [docker] tcp 0.0.0.0:6334: container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw
@@ -56,56 +62,108 @@ Findings (5)
     fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
 
 Notes
-  ufw: failed (exit status 1), skipped
+  process names need root: run with sudo to see them
+  ufw: not root, skipped
+  iptables: not root, skipped
+  nft: not root, skipped
+
+$ echo $?
+1
 ```
 
-When no risky exposures are detected:
-
-```
-Listeners
-  local
-    tcp  127.0.0.1:5432           python3 (pid 2)
-
-No findings.
-
-Notes
-  ufw: failed (exit status 1), skipped
-  docker: failed (exit status 1), skipped
-```
-
-Run with `sudo` to allow reading firewall rules and resolving process names owned by other users:
-
-```bash
-sudo exposecheck
-```
+*(Listener list above was trimmed for brevity.)*
 
 ### JSON output
 
-Use the `--json` flag for machine-readable JSON output:
+Run with `--json` for machine-readable JSON output:
 
 ```bash
-exposecheck --json
+$ ./exposecheck --json
+{
+  "listeners": [
+    {
+      "proto": "tcp",
+      "addr": "172.21.0.1",
+      "port": 53,
+      "inode": 38049,
+      "class": "public"
+    },
+    ... (trimmed 79 listeners) ...
+    {
+      "proto": "tcp",
+      "addr": "127.0.0.1",
+      "port": 6379,
+      "inode": 30421,
+      "class": "local"
+    }
+  ],
+  "findings": [
+    {
+      "kind": "docker",
+      "proto": "tcp",
+      "addr": "0.0.0.0",
+      "port": 6333,
+      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
+      "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
+    },
+    {
+      "kind": "docker",
+      "proto": "tcp",
+      "addr": "0.0.0.0",
+      "port": 6334,
+      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
+      "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
+    },
+    {
+      "kind": "docker",
+      "proto": "tcp",
+      "addr": "::",
+      "port": 6333,
+      "reason": "container local_rag_qdrant publishes port 6333/tcp on all interfaces; Docker bypasses ufw",
+      "fix": "publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain"
+    },
+    {
+      "kind": "docker",
+      "proto": "tcp",
+      "addr": "::",
+      "port": 6334,
+      "reason": "container local_rag_qdrant publishes port 6334/tcp on all interfaces; Docker bypasses ufw",
+      "fix": "publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain"
+    }
+  ],
+  "notes": [
+    "process names need root: run with sudo to see them",
+    "ufw: not root, skipped",
+    "iptables: not root, skipped",
+    "nft: not root, skipped"
+  ]
+}
+
+$ echo $?
+1
 ```
 
-See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for exit codes and full JSON field definitions.
+*(Listener list above was trimmed for brevity.)*
+
+See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for full exit code and JSON field documentation.
 
 ## How it works
 
-1. **Scans socket tables:** Reads `/proc/net/tcp`, `/proc/net/tcp6`, `/proc/net/udp`, and `/proc/net/udp6` to list all TCP and UDP listening sockets.
-2. **Classifies addresses:** Categorizes each listener address as `local` (loopback `127.0.0.0/8`, `::1`), `tailnet` (`100.64.0.0/10` or assigned to `tailscale0`), or `public` (all other IPs, including `0.0.0.0` and `::`).
-3. **Resolves processes:** Scans `/proc/<pid>/fd/` for socket file descriptors and reads `/proc/<pid>/comm` to match socket inodes to process names and PIDs.
-4. **Evaluates firewalls:** Inspects rules from `ufw status verbose`, `iptables -S`, and `nft list ruleset`. Flags any public listener not blocked by an active rule or a default drop policy.
-5. **Audits Docker:** Runs `docker ps` to find containers published on `0.0.0.0` or `[::]`, warning about ports that bypass ufw.
+- **Socket tables:** Reads listening sockets from `/proc/net/tcp`, `/proc/net/tcp6`, `/proc/net/udp`, and `/proc/net/udp6`.
+- **Process resolution:** Maps socket inode to PID and process name via `/proc/*/fd` symlinks and `/proc/<pid>/comm`.
+- **Firewall inspection:** Queries `ufw status verbose`, `iptables -S`, and `nft list ruleset` for rules blocking incoming traffic on public ports.
+- **Docker audit:** Runs `docker ps` to find containers publishing ports to all interfaces (`0.0.0.0` or `[::]`).
 
 ## Limits
 
 - **Linux only:** Requires Linux `/proc` filesystems (`/proc/net/*` and `/proc/<pid>/fd/*`).
-- **Own host only:** Audits the local machine where the command runs. It does not perform remote scans across networks.
-- **No remote scan:** Does not send network probes or test reachability from outside the machine.
-- **No config file:** Takes only an optional `--json` flag. There is no configuration file or whitelist system.
-- **No auto-fix:** Reports suggested fixes in output, but never modifies firewall rules, terminates processes, or restarts containers.
-- **Firewall parsing is simple:** Only parses basic port and protocol rules in the primary input filter chain. It does not evaluate source IP restrictions, network interfaces, or custom jump chains.
-- **Needs root:** Non-root users cannot read socket links in `/proc` for other users' processes, nor run firewall tools (`ufw`, `iptables`, `nft`). Run with `sudo` for full visibility.
+- **Own host only:** Audits the local host where the binary runs.
+- **No remote scan:** Does not scan remote hosts or send network packets to probe ports.
+- **No config file:** Takes only `--json`. No config file or exclusion rule file.
+- **No auto-fix:** Reports actionable fix commands, but does not modify firewalls or restart containers.
+- **Firewall parsing is simple:** Ignores source addresses and network interfaces. Hosts where the `INPUT` chain jumps to other chains (such as `ufw`) are noted and not evaluated.
+- **Needs root:** Needs root privileges (e.g. `sudo`) to resolve process names of other users and to query firewall tools (`ufw`, `iptables`, `nft`).
+- **Address classification:** Every non-loopback, non-tailnet address counts as public (including Docker bridge IPs).
 
 ## License
 
