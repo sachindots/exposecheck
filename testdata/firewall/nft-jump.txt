@@ -1,0 +1,10 @@
+table ip filter {
+	chain INPUT {
+		type filter hook input priority filter; policy drop;
+		counter packets 0 bytes 0 jump ufw-before-logging-input
+		counter packets 0 bytes 0 jump ufw-before-input
+	}
+	chain ufw-user-input {
+		tcp dport 22 counter packets 0 bytes 0 accept
+	}
+}

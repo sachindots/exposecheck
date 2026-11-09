@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -19,10 +20,12 @@ type rule struct {
 
 // ruleset is what one firewall tool says about incoming traffic. Rules are in
 // listed order and the first match wins; otherwise defaultDrop decides.
-// Limits: source addresses, interfaces and jumps to other chains are ignored,
-// and iptables is IPv4 only.
+// jumps is set when INPUT hands off to another chain (ufw, Docker); the
+// rules here are then incomplete and the ruleset must not count as blocking.
+// Limits: source addresses and interfaces are ignored, and iptables is IPv4 only.
 type ruleset struct {
 	defaultDrop bool
+	jumps       bool
 	rules       []rule
 }
 
@@ -63,7 +66,12 @@ func Check(run func(string, ...string) ([]byte, error), listeners []sockets.List
 			notes = append(notes, sockets.Note(tool.name+": "+skipReason(err)+", skipped"))
 			continue
 		}
-		sets = append(sets, tool.parse(string(out)))
+		rs := tool.parse(string(out))
+		if rs.jumps {
+			notes = append(notes, sockets.Note(tool.name+": INPUT jumps to other chains, not evaluated"))
+			continue
+		}
+		sets = append(sets, rs)
 	}
 	if len(sets) == 0 {
 		return nil, notes, nil
@@ -205,6 +213,11 @@ func parseIPTables(out string) ruleset {
 				target = f[i+1]
 			}
 		}
+		switch target {
+		case "ACCEPT", "DROP", "REJECT", "LOG", "RETURN":
+		default:
+			rs.jumps = true
+		}
 		if ports != "" {
 			addRules(&rs, proto, ports, target == "ACCEPT")
 		}
@@ -230,6 +243,8 @@ func parseNFT(out string) ruleset {
 				verdict := strings.TrimSuffix(strings.Fields(policy)[0], ";")
 				rs.defaultDrop = verdict == "drop" || verdict == "reject"
 			}
+		case inInput && (slices.Contains(f, "jump") || slices.Contains(f, "goto")):
+			rs.jumps = true
 		case inInput && len(f) >= 4 && (f[0] == "tcp" || f[0] == "udp") && f[1] == "dport":
 			ports := line[strings.Index(line, "dport ")+len("dport "):]
 			if strings.HasPrefix(ports, "{") {

@@ -1,0 +1,19 @@
+-P INPUT DROP
+-P FORWARD DROP
+-P OUTPUT ACCEPT
+-N ufw-after-input
+-N ufw-before-input
+-N ufw-before-logging-input
+-N ufw-reject-input
+-N ufw-track-input
+-N ufw-user-input
+-A INPUT -j ufw-before-logging-input
+-A INPUT -j ufw-before-input
+-A INPUT -j ufw-after-input
+-A INPUT -j ufw-reject-input
+-A INPUT -j ufw-track-input
+-A ufw-before-input -i lo -j ACCEPT
+-A ufw-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-input -j ufw-user-input
+-A ufw-user-input -p tcp -m tcp --dport 22 -j ACCEPT
+-A ufw-user-input -p tcp -m multiport --dports 80,443 -j ACCEPT

@@ -85,6 +85,23 @@ func TestCheck(t *testing.T) {
 			wantPorts: []uint16{22},
 		},
 		{
+			name:  "ufw host: iptables policy DROP with jumps must not hide what ufw allows",
+			tools: map[string]result{"ufw": {file: "ufw-default-deny.txt"}, "iptables": {file: "iptables-ufw.txt"}, "nft": missing},
+			// 22 and 8000-8100 are allowed by ufw, so they stay findings.
+			wantPorts: []uint16{22, 8080},
+			wantNotes: []sockets.Note{"iptables: INPUT jumps to other chains, not evaluated", "nft: not installed, skipped"},
+		},
+		{
+			name:      "only iptables with jumps: unreadable, no findings",
+			tools:     map[string]result{"ufw": {err: notRoot}, "iptables": {file: "iptables-ufw.txt"}, "nft": missing},
+			wantNotes: []sockets.Note{"ufw: not root, skipped", "iptables: INPUT jumps to other chains, not evaluated", "nft: not installed, skipped"},
+		},
+		{
+			name:      "only nft with jumps: unreadable, no findings",
+			tools:     map[string]result{"ufw": missing, "iptables": missing, "nft": {file: "nft-jump.txt"}},
+			wantNotes: []sockets.Note{"ufw: not installed, skipped", "iptables: not installed, skipped", "nft: INPUT jumps to other chains, not evaluated"},
+		},
+		{
 			name:      "not root: skipped, others still count",
 			tools:     map[string]result{"ufw": {file: "ufw-inactive.txt"}, "iptables": {err: notRoot}, "nft": {err: notRoot}},
 			wantPorts: []uint16{22, 8080, 5353},
