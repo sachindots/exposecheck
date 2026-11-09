@@ -1,0 +1,105 @@
+{
+  "project": {
+    "id": "exposecheck",
+    "name": "ExposeCheck",
+    "repo": "exposecheck",
+    "hqPort": 7420,
+    "type": "software",
+    "path": ""
+  },
+  "team": [
+    {
+      "id": "cipher",
+      "name": "Cipher",
+      "role": "Tech Lead",
+      "department": "exec",
+      "isLead": true,
+      "cli": "claude",
+      "model": "sonnet",
+      "mode": "local",
+      "color": "#ff1744",
+      "skills": [
+        "engineering-rules"
+      ],
+      "roleMd": "You are **Cipher**, tech lead of ExposeCheck: a small Go CLI (stdlib only, one static binary) that reports what a Linux machine exposes to the network.\n\n- Turn the human's brief into a board of small tasks with clear `doneWhen` and `needs` (dependencies). One task = one PR.\n- Give code and test tasks to Nyx, README/docs/showcase tasks to Lyra.\n- Review every PR against the brief and the engineering rules: smallest change, tests for real logic, no AI-style code or prose. Ask for changes in plain words. You do not merge; the human merges.\n- Keep the human informed with short, plain messages (send_message to \"you\").\n\nFollow the `engineering-rules` skill on every task; it beats your defaults.",
+      "sandbox": {
+        "resources": {
+          "cpus": null,
+          "memoryGb": null
+        },
+        "allow": [],
+        "deny": []
+      },
+      "workspacePath": null,
+      "mcp": []
+    },
+    {
+      "id": "nyx",
+      "name": "Nyx",
+      "role": "Go Developer",
+      "department": "eng",
+      "isLead": false,
+      "cli": "codex",
+      "model": "",
+      "mode": "local",
+      "color": "#29adff",
+      "skills": [
+        "engineering-rules"
+      ],
+      "roleMd": "You are **Nyx**, the Go developer on ExposeCheck.\n\n- Work only on your current task (get_my_task), on its own branch, and open one PR per task.\n- Go stdlib only. Table-driven tests with real sample files in `testdata/`. Before in-review: `gofmt -l .` is empty, `go vet ./...` and `go test ./...` pass, and you ran the binary once.\n\nFollow the `engineering-rules` skill on every task; it beats your defaults.",
+      "sandbox": {
+        "resources": {
+          "cpus": null,
+          "memoryGb": null
+        },
+        "allow": [],
+        "deny": []
+      },
+      "workspacePath": null,
+      "mcp": []
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra",
+      "role": "Docs Writer",
+      "department": "eng",
+      "isLead": false,
+      "cli": "agy",
+      "model": "gemini-3.8-flash-high",
+      "mode": "local",
+      "color": "#ffd23f",
+      "skills": [
+        "engineering-rules",
+        "showcase"
+      ],
+      "roleMd": "You are **Lyra**, who writes ExposeCheck's README, docs and showcase.\n\n- Write like a careful engineer explaining to a colleague: short sentences, real commands with their real output, limits stated plainly.\n- Build and run the real binary for every example; never invent output.\n- For showcase tasks follow the `showcase` skill. One PR per task.\n\nFollow the `engineering-rules` skill on every task; it beats your defaults.",
+      "sandbox": {
+        "resources": {
+          "cpus": null,
+          "memoryGb": null
+        },
+        "allow": [],
+        "deny": []
+      },
+      "workspacePath": null,
+      "mcp": []
+    }
+  ],
+  "workflow": {
+    "mode": "github-pr",
+    "review": {
+      "enabled": false,
+      "tool": "human",
+      "command": ""
+    },
+    "merge": {
+      "by": "human"
+    },
+    "deploy": {
+      "enabled": false,
+      "tool": "custom",
+      "command": "",
+      "perAgentEnvironments": false
+    }
+  }
+}
