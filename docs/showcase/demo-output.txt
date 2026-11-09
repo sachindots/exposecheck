@@ -2,21 +2,17 @@
 $ ./exposecheck
 Listeners
   public
-    tcp  0.0.0.0:8080             python3 (pid 191998)
+    tcp  0.0.0.0:8080             python3 (pid 300404)
   local
-    tcp  127.0.0.1:6379           python3 (pid 191999)
+    tcp  127.0.0.1:6379           python3 (pid 300405)
 
-Findings (5)
+Findings (3)
   [firewall] tcp 0.0.0.0:8080: public listener not blocked by firewall
     fix: ufw deny 8080/tcp, or bind to 127.0.0.1
   [docker] tcp 0.0.0.0:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
-    fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp 0.0.0.0:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
-    fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
+    fix: publish with -p 127.0.0.1:6333:80, or filter in the DOCKER-USER chain
   [docker] tcp [::]:6333: container demo-db publishes port 6333/tcp on all interfaces; Docker bypasses ufw
-    fix: publish with -p 127.0.0.1:6333:6333, or filter in the DOCKER-USER chain
-  [docker] tcp [::]:6334: container demo-db publishes port 6334/tcp on all interfaces; Docker bypasses ufw
-    fix: publish with -p 127.0.0.1:6334:6334, or filter in the DOCKER-USER chain
+    fix: publish with -p 127.0.0.1:6333:80, or filter in the DOCKER-USER chain
 
 Notes
   process names need root: run with sudo to see them
