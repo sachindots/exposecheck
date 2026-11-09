@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/netip"
 	"os"
+	"runtime/debug"
 
 	"github.com/sachindots/exposecheck/internal/docker"
 	"github.com/sachindots/exposecheck/internal/firewall"
@@ -14,13 +15,21 @@ import (
 	"github.com/sachindots/exposecheck/internal/sockets"
 )
 
-const usage = "usage: exposecheck [--json]\n"
+const usage = "usage: exposecheck [--json | --version]\n"
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && args[0] == "--version" {
+		var version string
+		if build, ok := debug.ReadBuildInfo(); ok {
+			version = build.Main.Version
+		}
+		fmt.Fprintln(stdout, normalizeVersion(version))
+		return 0
+	}
 	asJSON := len(args) == 1 && args[0] == "--json"
 	if len(args) > 0 && !asJSON {
 		fmt.Fprint(stderr, usage)
@@ -42,6 +51,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprint(stdout, rep.Text())
 	}
 	return rep.ExitCode()
+}
+
+func normalizeVersion(version string) string {
+	if version == "" || version == "(devel)" {
+		return "dev"
+	}
+	return version
 }
 
 func collect() (report.Report, error) {
