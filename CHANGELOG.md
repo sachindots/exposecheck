@@ -2,14 +2,14 @@
 
 All notable changes to exposecheck are documented in this file.
 
-## [v0.1.2] - 2026-11-10
+## [Unreleased]
 
 - Added `--version` flag to print build version and exit 0 (#11).
 - Added `--only public` flag to filter text and JSON reports to public listeners and findings (#12).
 
 ## [v0.1.1] - 2026-11-09
 
-- Added `bridge` address classification for `docker0`, `br-*`, and `virbr*` interfaces so bridge addresses raise no findings (#9).
+- Added `bridge` address classification for `docker0`, `br-*`, and `virbr*` interfaces (#9).
 - Updated showcase demo script and assets to run against a real throwaway container (#10).
 
 ## [v0.1.0] - 2026-11-09
