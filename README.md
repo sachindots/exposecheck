@@ -73,6 +73,44 @@ $ echo $?
 
 *(Listener list above was trimmed for brevity.)*
 
+### Filter public listeners
+
+Run with `--only public` to omit local, tailnet, and bridge listeners from the report:
+
+```bash
+$ ./exposecheck --only public
+Listeners
+  public
+    tcp  192.168.1.106:53
+    tcp  [fe80::8563:dc16:5b50:af19]:53
+    udp  192.168.1.106:53
+    udp  [fe80::8563:dc16:5b50:af19]:53
+    udp  0.0.0.0:67
+    udp  [fe80::8563:dc16:5b50:af19]:546
+    tcp  [::]:3389                gnome-remote-de (pid 3988)
+    udp  0.0.0.0:5353
+    udp  [::]:5353
+    tcp  [::]:8000                gohttpserver (pid 1843)
+    tcp  [::]:21115               hbbs (pid 1864)
+    tcp  [::]:21116               hbbs (pid 1864)
+    udp  [::]:21116               hbbs (pid 1864)
+    tcp  [::]:21117               hbbr (pid 1862)
+    tcp  [::]:21118               hbbs (pid 1864)
+    tcp  [::]:21119               hbbr (pid 1862)
+    udp  [::]:43687               hbbs (pid 1864)
+
+No findings.
+
+Notes
+  process names need root: run with sudo to see them
+  ufw: not root, skipped
+  iptables: not root, skipped
+  nft: not root, skipped
+
+$ echo $?
+0
+```
+
 ### JSON output
 
 Run with `--json` for machine-readable JSON output:
@@ -81,7 +119,22 @@ Run with `--json` for machine-readable JSON output:
 $ ./exposecheck --json
 ```
 
+Combine `--only public` and `--json` to filter JSON output to public listeners:
+
+```bash
+$ ./exposecheck --only public --json
+```
+
 See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for JSON schema details, exit codes, and output examples.
+
+### Version
+
+Print the build version and exit:
+
+```bash
+$ ./exposecheck --version
+v0.1.2-0.20261110022950-64cc544c8f33
+```
 
 ## How it works
 
@@ -95,7 +148,7 @@ See [docs/exit-codes-and-json.md](docs/exit-codes-and-json.md) for JSON schema d
 - **Linux only:** Requires Linux `/proc` filesystems (`/proc/net/*` and `/proc/<pid>/fd/*`).
 - **Own host only:** Audits the local host where the binary runs.
 - **No remote scan:** Does not scan remote hosts or send network packets to probe ports.
-- **No config file:** Takes only `--json`. No config file or exclusion rule file.
+- **No config file:** Takes only `--json`, `--only public`, and `--version`. No config file or exclusion rule file.
 - **No auto-fix:** Reports actionable fix commands, but does not modify firewalls or restart containers.
 - **Firewall parsing is simple:** Ignores source addresses and network interfaces. Hosts where the `INPUT` chain jumps to other chains (such as `ufw`) are noted and not evaluated.
 - **Needs root:** Needs root privileges (e.g. `sudo`) to resolve process names of other users and to query firewall tools (`ufw`, `iptables`, `nft`).
