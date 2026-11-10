@@ -15,13 +15,17 @@ import (
 	"github.com/sachindots/exposecheck/internal/sockets"
 )
 
-const usage = "usage: exposecheck [--json | --version]\n"
+const usage = "usage: exposecheck [--json] [--only public] | --version\n"
 
 func main() {
 	os.Exit(run(os.Args[1:], os.Stdout, os.Stderr))
 }
 
 func run(args []string, stdout, stderr io.Writer) int {
+	return runWithCollect(args, stdout, stderr, collect)
+}
+
+func runWithCollect(args []string, stdout, stderr io.Writer, collect func() (report.Report, error)) int {
 	if len(args) == 1 && args[0] == "--version" {
 		var version string
 		if build, ok := debug.ReadBuildInfo(); ok {
@@ -30,15 +34,26 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, normalizeVersion(version))
 		return 0
 	}
-	asJSON := len(args) == 1 && args[0] == "--json"
-	if len(args) > 0 && !asJSON {
-		fmt.Fprint(stderr, usage)
-		return 2
+	var asJSON, onlyPublic bool
+	for i := 0; i < len(args); i++ {
+		switch {
+		case args[i] == "--json" && !asJSON:
+			asJSON = true
+		case args[i] == "--only" && !onlyPublic && i+1 < len(args) && args[i+1] == "public":
+			onlyPublic = true
+			i++
+		default:
+			fmt.Fprint(stderr, usage)
+			return 2
+		}
 	}
 	rep, err := collect()
 	if err != nil {
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if onlyPublic {
+		rep = publicOnly(rep)
 	}
 	if asJSON {
 		out, err := rep.JSON()
@@ -51,6 +66,28 @@ func run(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprint(stdout, rep.Text())
 	}
 	return rep.ExitCode()
+}
+
+func publicOnly(rep report.Report) report.Report {
+	filtered := report.Report{Notes: rep.Notes}
+	for _, listener := range rep.Listeners {
+		if listener.Class == sockets.Public {
+			filtered.Listeners = append(filtered.Listeners, listener)
+		}
+	}
+	for _, finding := range rep.Findings {
+		if finding.Kind == "docker" {
+			filtered.Findings = append(filtered.Findings, finding)
+			continue
+		}
+		for _, listener := range filtered.Listeners {
+			if finding.Proto == listener.Proto && finding.Addr == listener.Addr && finding.Port == listener.Port {
+				filtered.Findings = append(filtered.Findings, finding)
+				break
+			}
+		}
+	}
+	return filtered
 }
 
 func normalizeVersion(version string) string {
