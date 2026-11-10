@@ -1,0 +1,11 @@
+{
+  "listeners": [
+    {"proto":"udp","addr":"::","port":9090,"inode":2,"class":"public"},
+    {"proto":"tcp","addr":"0.0.0.0","port":8080,"inode":4,"class":"public","process":{"pid":812,"command":"web"}}
+  ],
+  "findings": [
+    {"kind":"docker","proto":"tcp","addr":"0.0.0.0","port":8080,"reason":"published web port","fix":"bind to loopback"},
+    {"kind":"firewall","proto":"udp","addr":"::","port":9090,"reason":"public UDP port","fix":"block UDP port"}
+  ],
+  "notes": ["iptables: not root, skipped", "docker: partial inspection"]
+}

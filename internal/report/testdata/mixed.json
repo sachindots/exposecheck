@@ -1,0 +1,19 @@
+{
+  "listeners": [
+    {"proto":"tcp","addr":"127.0.0.1","port":8080,"inode":1,"class":"local"},
+    {"proto":"udp","addr":"::","port":9090,"inode":2,"class":"public"},
+    {"proto":"udp","addr":"100.64.0.5","port":41641,"inode":3,"class":"tailnet"},
+    {"proto":"tcp","addr":"0.0.0.0","port":8080,"inode":4,"class":"public","process":{"pid":812,"command":"web"}},
+    {"proto":"tcp","addr":"172.17.0.1","port":2375,"inode":5,"class":"bridge"}
+  ],
+  "findings": [
+    {"kind":"firewall","proto":"tcp","addr":"127.0.0.1","port":8080,"reason":"local finding","fix":"local fix"},
+    {"kind":"firewall","proto":"udp","addr":"100.64.0.5","port":41641,"reason":"tailnet finding","fix":"tailnet fix"},
+    {"kind":"docker","proto":"tcp","addr":"0.0.0.0","port":8080,"reason":"published web port","fix":"bind to loopback"},
+    {"kind":"firewall","proto":"tcp","addr":"172.17.0.1","port":2375,"reason":"bridge finding","fix":"bridge fix"},
+    {"kind":"firewall","proto":"udp","addr":"::","port":9090,"reason":"public UDP port","fix":"block UDP port"},
+    {"kind":"firewall","proto":"udp","addr":"0.0.0.0","port":8080,"reason":"different protocol","fix":"protocol fix"},
+    {"kind":"firewall","proto":"tcp","addr":"0.0.0.0","port":8081,"reason":"different port","fix":"port fix"}
+  ],
+  "notes": ["iptables: not root, skipped", "docker: partial inspection"]
+}
